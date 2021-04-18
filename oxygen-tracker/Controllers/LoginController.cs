@@ -10,16 +10,16 @@ namespace oxygen_tracker.Controllers
     public class LoginController : ControllerBase
     {
         [HttpGet]
-        public async Task<IActionResult> GetSecuredData()
+        public IActionResult GetSecuredData()
         {
-            return Ok("All good");
+            return Ok("This Secured Data is available only for Authenticated Users.");
         }
 
         [HttpPost]
-        [Authorize(Roles = "Administration")]
-        public async Task<IActionResult> PostSecuredData()
+        [Authorize(Roles = "Administrator")]
+        public IActionResult PostSecuredData()
         {
-            return Ok("Posted correctly");
+            return Ok("This Secured Data is available only for Administrators.");
         }
     }
 }

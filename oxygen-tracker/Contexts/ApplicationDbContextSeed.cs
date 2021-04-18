@@ -20,7 +20,7 @@ namespace oxygen_tracker.Constants.Contexts
                 UserName = Authorization.default_username,
                 Email = Authorization.default_email,
                 EmailConfirmed = true,
-                PhoneNumberConfirmed = true
+                PhoneNumberConfirmed = true 
             };
             if (userManager.Users.All(u => u.Id != defaultUser.Id))
             {
