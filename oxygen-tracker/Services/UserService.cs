@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using oxygen_tracker.Constants;
@@ -19,7 +18,7 @@ using System.Threading.Tasks;
 
 namespace oxygen_tracker.Controllers.Services
 {
-       public class UserService : IUserService
+    public class UserService : IUserService
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
@@ -31,6 +30,7 @@ namespace oxygen_tracker.Controllers.Services
             _userManager = userManager;
             _jwt = jwt.Value;
         }
+
         public async Task<string> RegisterAsync(RegisterModel model)
         {
             var user = new ApplicationUser
@@ -47,7 +47,6 @@ namespace oxygen_tracker.Controllers.Services
                 if (result.Succeeded)
                 {
                     await _userManager.AddToRoleAsync(user, Authorization.default_role.ToString());
-
                 }
                 return $"User Registered with username {user.UserName}";
             }
@@ -56,6 +55,7 @@ namespace oxygen_tracker.Controllers.Services
                 return $"Email {user.Email } is already registered.";
             }
         }
+
         public async Task<AuthenticationModel> GetTokenAsync(TokenRequestModel model)
         {
             var authenticationModel = new AuthenticationModel();
@@ -75,7 +75,6 @@ namespace oxygen_tracker.Controllers.Services
                 authenticationModel.UserName = user.UserName;
                 var rolesList = await _userManager.GetRolesAsync(user).ConfigureAwait(false);
                 authenticationModel.Roles = rolesList.ToList();
-
 
                 if (user.RefreshTokens.Any(a => a.IsActive))
                 {
@@ -166,7 +165,6 @@ namespace oxygen_tracker.Controllers.Services
                 return $"Role {model.Role} not found.";
             }
             return $"Incorrect Credentials for user {user.Email}.";
-
         }
 
         public async Task<AuthenticationModel> RefreshTokenAsync(string token)
@@ -210,6 +208,7 @@ namespace oxygen_tracker.Controllers.Services
             authenticationModel.RefreshTokenExpiration = newRefreshToken.Expires;
             return authenticationModel;
         }
+
         public bool RevokeToken(string token)
         {
             var user = _context.Users.SingleOrDefault(u => u.RefreshTokens.Any(t => t.Token == token));
@@ -236,6 +235,6 @@ namespace oxygen_tracker.Controllers.Services
         }
 
         //TODO : Update User Details
-        //TODO : Remove User from Role 
+        //TODO : Remove User from Role
     }
 }
