@@ -11,7 +11,7 @@
 
         public const string default_username = "user";
         public const string default_email = "user@gmail.com";
-        public const string default_password = "password";
+        public const string default_password = "Strong@123";
         public const Roles default_role = Roles.User;
     }
 }

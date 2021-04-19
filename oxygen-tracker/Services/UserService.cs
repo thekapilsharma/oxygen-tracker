@@ -78,7 +78,7 @@ namespace oxygen_tracker.Controllers.Services
 
                 if (user.RefreshTokens.Any(a => a.IsActive))
                 {
-                    var activeRefreshToken = user.RefreshTokens.Where(a => a.IsActive == true).FirstOrDefault();
+                    var activeRefreshToken = user.RefreshTokens.FirstOrDefault(a => a.IsActive);
                     authenticationModel.RefreshToken = activeRefreshToken.Token;
                     authenticationModel.RefreshTokenExpiration = activeRefreshToken.Expires;
                 }
@@ -167,10 +167,10 @@ namespace oxygen_tracker.Controllers.Services
             return $"Incorrect Credentials for user {user.Email}.";
         }
 
-        public async Task<AuthenticationModel> RefreshTokenAsync(string token)
+        public async Task<AuthenticationModel> RefreshTokenAsync(string jwtToken)
         {
             var authenticationModel = new AuthenticationModel();
-            var user = _context.Users.SingleOrDefault(u => u.RefreshTokens.Any(t => t.Token == token));
+            var user = _context.Users.SingleOrDefault(u => u.RefreshTokens.Any(t => t.Token == jwtToken));
             if (user == null)
             {
                 authenticationModel.IsAuthenticated = false;
@@ -178,7 +178,7 @@ namespace oxygen_tracker.Controllers.Services
                 return authenticationModel;
             }
 
-            var refreshToken = user.RefreshTokens.Single(x => x.Token == token);
+            var refreshToken = user.RefreshTokens.Single(x => x.Token == jwtToken);
 
             if (!refreshToken.IsActive)
             {
