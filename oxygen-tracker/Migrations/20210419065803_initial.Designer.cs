@@ -10,7 +10,7 @@ using oxygen_tracker.Settings.Models.Contexts;
 namespace oxygen_tracker.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20210418183442_initial")]
+    [Migration("20210419065803_initial")]
     partial class initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
