@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using oxygen_tracker.Constants;
 using oxygen_tracker.Entities;
 using oxygen_tracker.Models;
+using oxygen_tracker.Services;
 using oxygen_tracker.Settings;
 using oxygen_tracker.Settings.Models;
 using oxygen_tracker.Settings.Models.Contexts;
@@ -21,84 +23,92 @@ namespace oxygen_tracker.Controllers.Services
     public class UserService : IUserService
     {
         private readonly ApplicationDbContext _context;
+        private readonly IVerification _verification;
+        private readonly IMapper _mapper;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly JWT _jwt;
 
-        public UserService(UserManager<ApplicationUser> userManager, IOptions<JWT> jwt, ApplicationDbContext context)
+        public UserService(
+            UserManager<ApplicationUser> userManager,
+            IOptions<JWT> jwt,
+            ApplicationDbContext context,
+            IVerification verification,
+            IMapper mapper)
         {
             _context = context;
+            _verification = verification;
+            this._mapper = mapper;
             _userManager = userManager;
             _jwt = jwt.Value;
         }
 
-        public async Task<string> RegisterAsync(RegisterModel model)
+        public async Task<UserDetail> GetUserInfoAsync(string phoneNumber)
         {
+            var userDetails = _mapper.Map<UserDetail>(await _userManager.FindByNameAsync(phoneNumber));
+            var smsVerificationResult = await _verification.StartVerificationAsync(DefaultValues.IndianCode + phoneNumber);
+            if (!smsVerificationResult.IsValid) userDetails.ErrorCodes = smsVerificationResult.Errors;
+            return userDetails;
+        }
+
+        public async Task<AuthenticationModel> RegisterAsync(RegisterModel model)
+        {
+            var smsVerificationResult = await _verification.CheckVerificationAsync(DefaultValues.IndianCode + model.Phonenumber, model.OTP);
+            var authenticationModel = new AuthenticationModel();
+
+            if (!smsVerificationResult.IsValid)
+            {
+                authenticationModel.ErrorCodes = smsVerificationResult.Errors;
+                return authenticationModel;
+            }
             var user = new ApplicationUser
             {
                 UserName = model.Username,
-                Email = model.Email,
+                PhoneNumber = model.Phonenumber,
                 FirstName = model.FirstName,
-                LastName = model.LastName
+                LastName = model.LastName,
+                Email = model.Email
             };
-            var userWithSameEmail = await _userManager.FindByEmailAsync(model.Email);
-            if (userWithSameEmail == null)
+            var userDetail = await _userManager.FindByEmailAsync(model.Email);
+            if (userDetail == null)
             {
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
                     await _userManager.AddToRoleAsync(user, Authorization.default_role.ToString());
                 }
-                return $"User Registered with username {user.UserName}";
+                else
+                {
+                    authenticationModel.ErrorCodes = DefaultValues.ErrorCodes.SomethingWentWrong;
+                    return authenticationModel;
+                }
+            }
+            user = await _userManager.FindByEmailAsync(model.Email);
+            authenticationModel.IsAuthenticated = true;
+            JwtSecurityToken jwtSecurityToken = await CreateJwtToken(user);
+            authenticationModel.Token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
+            authenticationModel.UserName = user.UserName;
+            authenticationModel.Email = user.Email;
+            var rolesList = await _userManager.GetRolesAsync(user).ConfigureAwait(false);
+            authenticationModel.Roles = rolesList.ToList();
+
+            if (user.RefreshTokens.Any(a => a.IsActive))
+            {
+                var activeRefreshToken = user.RefreshTokens.FirstOrDefault(a => a.IsActive);
+                authenticationModel.RefreshToken = activeRefreshToken.Token;
+                authenticationModel.RefreshTokenExpiration = activeRefreshToken.Expires;
             }
             else
             {
-                return $"Email {user.Email } is already registered.";
+                var refreshToken = CreateRefreshToken();
+                authenticationModel.RefreshToken = refreshToken.Token;
+                authenticationModel.RefreshTokenExpiration = refreshToken.Expires;
+                user.RefreshTokens.Add(refreshToken);
+                _context.Update(user);
+                _context.SaveChanges();
             }
-        }
 
-        public async Task<AuthenticationModel> GetTokenAsync(TokenRequestModel model)
-        {
-            var authenticationModel = new AuthenticationModel();
-            var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user == null)
-            {
-                authenticationModel.IsAuthenticated = false;
-                authenticationModel.Message = $"No Accounts Registered with {model.Email}.";
-                return authenticationModel;
-            }
-            if (await _userManager.CheckPasswordAsync(user, model.Password))
-            {
-                authenticationModel.IsAuthenticated = true;
-                JwtSecurityToken jwtSecurityToken = await CreateJwtToken(user);
-                authenticationModel.Token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
-                authenticationModel.Email = user.Email;
-                authenticationModel.UserName = user.UserName;
-                var rolesList = await _userManager.GetRolesAsync(user).ConfigureAwait(false);
-                authenticationModel.Roles = rolesList.ToList();
-
-                if (user.RefreshTokens.Any(a => a.IsActive))
-                {
-                    var activeRefreshToken = user.RefreshTokens.FirstOrDefault(a => a.IsActive);
-                    authenticationModel.RefreshToken = activeRefreshToken.Token;
-                    authenticationModel.RefreshTokenExpiration = activeRefreshToken.Expires;
-                }
-                else
-                {
-                    var refreshToken = CreateRefreshToken();
-                    authenticationModel.RefreshToken = refreshToken.Token;
-                    authenticationModel.RefreshTokenExpiration = refreshToken.Expires;
-                    user.RefreshTokens.Add(refreshToken);
-                    _context.Update(user);
-                    _context.SaveChanges();
-                }
-
-                return authenticationModel;
-            }
-            authenticationModel.IsAuthenticated = false;
-            authenticationModel.Message = $"Incorrect Credentials for user {user.Email}.";
             return authenticationModel;
         }
-
         private static RefreshToken CreateRefreshToken()
         {
             var randomNumber = new byte[32];
@@ -123,7 +133,6 @@ namespace oxygen_tracker.Controllers.Services
             {
                 roleClaims.Add(new Claim("roles", roles[i]));
             }
-
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
@@ -233,8 +242,5 @@ namespace oxygen_tracker.Controllers.Services
         {
             return _context.Users.Find(id);
         }
-
-        //TODO : Update User Details
-        //TODO : Remove User from Role
     }
 }

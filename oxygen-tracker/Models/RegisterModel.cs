@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using oxygen_tracker.Constants;
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace oxygen_tracker.Models
 {
@@ -8,15 +10,16 @@ namespace oxygen_tracker.Models
         public string FirstName { get; set; }
 
         [Required]
+        public string Phonenumber { get; set; }
+
         public string LastName { get; set; }
 
-        [Required]
-        public string Username { get; set; }
+        public string Email => Phonenumber + DefaultValues.Domain;
 
-        [Required]
-        public string Email { get; set; }
+        public string OTP { get; set; }
 
-        [Required]
-        public string Password { get; set; }
+        public string Password => Phonenumber + "@" + FirstName;
+
+        public string Username => Phonenumber;
     }
 }

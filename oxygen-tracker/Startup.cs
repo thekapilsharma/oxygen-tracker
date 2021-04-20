@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using oxygen_tracker.Controllers.Services;
+using oxygen_tracker.Services;
 using oxygen_tracker.Settings;
 using oxygen_tracker.Settings.Models;
 using oxygen_tracker.Settings.Models.Contexts;
@@ -33,6 +34,7 @@ namespace oxygen_tracker
 
             //User Manager Service
             services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
+            services.AddScoped<IVerification, Verification>();
             services.AddScoped<IUserService, UserService>();
 
             //Adding DB Context with MSSQL
@@ -66,6 +68,7 @@ namespace oxygen_tracker
                     };
                 });
             services.AddControllers();
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

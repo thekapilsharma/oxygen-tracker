@@ -19,19 +19,17 @@ namespace oxygen_tracker.Controllers
             _userService = userService;
         }
 
+        [HttpGet("{phone}")]
+        public async Task<ActionResult<UserDetail>> GetUser(string phone)
+        {
+            var userDetail = await _userService.GetUserInfoAsync(phone);
+            return Ok(userDetail);
+        }
+
         [HttpPost("register")]
-        //[ApiExplorerSettings(IgnoreApi = true)]
         public async Task<ActionResult> RegisterAsync(RegisterModel model)
         {
             var result = await _userService.RegisterAsync(model);
-            return Ok(result);
-        }
-
-        [HttpPost("token")]
-        public async Task<IActionResult> GetTokenAsync(TokenRequestModel model)
-        {
-            var result = await _userService.GetTokenAsync(model);
-            SetRefreshTokenInCookie(result.RefreshToken);
             return Ok(result);
         }
 

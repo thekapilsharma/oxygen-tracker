@@ -1,24 +1,39 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using oxygen_tracker.Controllers.Services;
+using oxygen_tracker.Models;
+using System;
+using System.Threading.Tasks;
 
 namespace oxygen_tracker.Controllers
 {
-    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class LoginController : ControllerBase
     {
-        [HttpGet]
-        public IActionResult GetSecuredData()
+        private readonly IUserService _userService;
+
+        public LoginController(IUserService userService)
         {
-            return Ok("This Secured Data is available only for Authenticated Users.");
+            this._userService = userService;
         }
 
         [HttpPost]
-        [Authorize(Roles = "Administrator")]
-        public IActionResult PostSecuredData()
+        public async Task<IActionResult> LoginUserAsync(RegisterModel model)
         {
-            return Ok("This Secured Data is available only for Administrators.");
+            var result = await _userService.RegisterAsync(model);
+            SetRefreshTokenInCookie(result.RefreshToken);
+            return Ok(result);
+        }
+
+        private void SetRefreshTokenInCookie(string refreshToken)
+        {
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Expires = DateTime.UtcNow.AddDays(10),
+            };
+            Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
         }
     }
 }
