@@ -6,7 +6,9 @@ namespace oxygen_tracker.Controllers.Services
 {
     public interface IUserService
     {
-        Task<string> RegisterAsync(RegisterModel model);
+        Task<UserDetail> GetUserInfoAsync(string phoneNumber);
+
+        Task<AuthenticationModel> RegisterAsync(RegisterModel model);
 
         Task<AuthenticationModel> GetTokenAsync(TokenRequestModel model);
 
