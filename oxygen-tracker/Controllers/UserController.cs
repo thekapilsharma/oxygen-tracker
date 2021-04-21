@@ -26,20 +26,6 @@ namespace oxygen_tracker.Controllers
             return Ok(userDetail);
         }
 
-        [HttpPost("register")]
-        public async Task<ActionResult> RegisterAsync(RegisterModel model)
-        {
-            var result = await _userService.RegisterAsync(model);
-            return Ok(result);
-        }
-
-        [HttpPost("addrole")]
-        public async Task<IActionResult> AddRoleAsync(AddRoleModel model)
-        {
-            var result = await _userService.AddRoleAsync(model);
-            return Ok(result);
-        }
-
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken()
         {
@@ -75,14 +61,6 @@ namespace oxygen_tracker.Controllers
                 Expires = DateTime.UtcNow.AddDays(10),
             };
             Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
-        }
-
-        [Authorize]
-        [HttpPost("tokens/{id}")]
-        public IActionResult GetRefreshTokens(string id)
-        {
-            var user = _userService.GetById(id);
-            return Ok(user.RefreshTokens);
         }
     }
 }

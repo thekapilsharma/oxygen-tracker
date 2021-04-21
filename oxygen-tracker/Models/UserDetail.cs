@@ -9,6 +9,6 @@ namespace oxygen_tracker.Models
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string PhoneNumber { get; set; }
-        public bool IsNewUser => String.IsNullOrEmpty(FirstName) && String.IsNullOrEmpty(PhoneNumber);
+        public bool IsNewUser => String.IsNullOrEmpty(FirstName);
     }
 }

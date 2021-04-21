@@ -10,14 +10,8 @@ namespace oxygen_tracker.Controllers.Services
 
         Task<AuthenticationModel> RegisterAsync(RegisterModel model);
 
-        Task<AuthenticationModel> GetTokenAsync(TokenRequestModel model);
-
-        Task<string> AddRoleAsync(AddRoleModel model);
-
         Task<AuthenticationModel> RefreshTokenAsync(string jwtToken);
 
         bool RevokeToken(string token);
-
-        ApplicationUser GetById(string id);
     }
 }
