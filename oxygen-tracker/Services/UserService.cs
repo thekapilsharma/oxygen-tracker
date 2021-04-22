@@ -45,6 +45,7 @@ namespace oxygen_tracker.Controllers.Services
         public async Task<UserDetail> GetUserInfoAsync(string phoneNumber)
         {
             var userDetails = _mapper.Map<UserDetail>(await _userManager.FindByNameAsync(phoneNumber));
+            userDetails ??= new UserDetail { PhoneNumber = phoneNumber };
             var smsVerificationResult = await _verification.StartVerificationAsync(DefaultValues.IndianCode + phoneNumber);
             if (!smsVerificationResult.IsValid) userDetails.ErrorCodes = smsVerificationResult.Errors;
             return userDetails;
@@ -155,27 +156,6 @@ namespace oxygen_tracker.Controllers.Services
             return jwtSecurityToken;
         }
 
-        public async Task<string> AddRoleAsync(AddRoleModel model)
-        {
-            var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user == null)
-            {
-                return $"No Accounts Registered with {model.Email}.";
-            }
-            if (await _userManager.CheckPasswordAsync(user, model.Password))
-            {
-                var roleExists = Enum.GetNames(typeof(Authorization.Roles)).Any(x => x.ToLower() == model.Role.ToLower());
-                if (roleExists)
-                {
-                    var validRole = Enum.GetValues(typeof(Authorization.Roles)).Cast<Authorization.Roles>().Where(x => x.ToString().ToLower() == model.Role.ToLower()).FirstOrDefault();
-                    await _userManager.AddToRoleAsync(user, validRole.ToString());
-                    return $"Added {model.Role} to user {model.Email}.";
-                }
-                return $"Role {model.Role} not found.";
-            }
-            return $"Incorrect Credentials for user {user.Email}.";
-        }
-
         public async Task<AuthenticationModel> RefreshTokenAsync(string jwtToken)
         {
             var authenticationModel = new AuthenticationModel();
@@ -236,11 +216,6 @@ namespace oxygen_tracker.Controllers.Services
             _context.SaveChanges();
 
             return true;
-        }
-
-        public ApplicationUser GetById(string id)
-        {
-            return _context.Users.Find(id);
         }
     }
 }
