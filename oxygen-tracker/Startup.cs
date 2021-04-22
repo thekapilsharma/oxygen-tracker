@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using oxygen_tracker.Controllers.Services;
+using oxygen_tracker.Services;
 using oxygen_tracker.Settings;
 using oxygen_tracker.Settings.Models;
 using oxygen_tracker.Settings.Models.Contexts;
@@ -28,31 +29,27 @@ namespace oxygen_tracker
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            //Resolving Dependencies
-            services.AddTransient<IUserService, UserService>();
-
             //Configuration from AppSettings
             services.Configure<JWT>(Configuration.GetSection("JWT"));
 
             //User Manager Service
-            services.AddIdentity<ApplicationUser, IdentityRole>()
-                .AddEntityFrameworkStores<ApplicationDbContext>();
+            services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
+            services.AddScoped<IVerification, Verification>();
+            services.AddScoped<IUserService, UserService>();
 
             //Adding DB Context with MSSQL
             services.AddDbContext<ApplicationDbContext>(options =>
-            {
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection"),
-                    b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)
-                    );
-            });
+                    b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));
 
-            // Adding Authentication - JWT
+            //Adding Athentication - JWT
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })
+
                 .AddJwtBearer(o =>
                 {
                     o.RequireHttpsMetadata = false;
@@ -64,13 +61,15 @@ namespace oxygen_tracker
                         ValidateAudience = true,
                         ValidateLifetime = true,
                         ClockSkew = TimeSpan.Zero,
+
                         ValidIssuer = Configuration["JWT:Issuer"],
                         ValidAudience = Configuration["JWT:Audience"],
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWT:Key"]))
                     };
                 });
-
+            services.AddCors();
             services.AddControllers();
+            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -80,11 +79,15 @@ namespace oxygen_tracker
             {
                 app.UseDeveloperExceptionPage();
             }
+            app.UseCors(options => options.AllowAnyOrigin()
+                         .AllowAnyMethod()
+                         .AllowAnyHeader()
+                         );
+            app.UseHttpsRedirection();
 
             app.UseRouting();
 
             app.UseAuthentication();
-
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
