@@ -4,6 +4,7 @@ using oxygen_tracker.Entities;
 using oxygen_tracker.Models;
 using oxygen_tracker.Settings;
 using oxygen_tracker.Settings.Models;
+using oxygen_tracker.Settings.Models.Contexts;
 using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
@@ -20,11 +21,13 @@ namespace oxygen_tracker.Services
         private readonly IJwtTokenService _jwtTokenService;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly JWT _jwt;
-        public JwtTokenService(IJwtTokenService jwtTokenService, UserManager<ApplicationUser> userManager,JWT jwt)
+        private readonly ApplicationDbContext _context;
+        public JwtTokenService(IJwtTokenService jwtTokenService, UserManager<ApplicationUser> userManager,JWT jwt,ApplicationDbContext context)
         {
             _jwtTokenService = jwtTokenService;
             _userManager = userManager;
             _jwt = jwt;
+            _context = context;
         }
 
         /// <summary>
@@ -82,11 +85,71 @@ namespace oxygen_tracker.Services
             };
         }
 
-
-        public Task<AuthenticationModel> RefreshTokenAsync(string jwtToken)
+        /// <summary>
+        /// Refresh token
+        /// </summary>
+        /// <param name="jwtToken"></param>
+        /// <returns></returns>
+        public async Task<AuthenticationModel> RefreshTokenAsync(string jwtToken)
         {
-            throw new NotImplementedException();
+            var authenticationModel = new AuthenticationModel();
+            var user = _context.Users.SingleOrDefault(u => u.RefreshTokens.Any(t => t.Token == jwtToken));
+            if (user == null)
+            {
+                authenticationModel.IsAuthenticated = false;
+                authenticationModel.Message = $"Token did not match any users.";
+                return authenticationModel;
+            }
+
+            var refreshToken = user.RefreshTokens.Single(x => x.Token == jwtToken);
+
+            if (!refreshToken.IsActive)
+            {
+                authenticationModel.IsAuthenticated = false;
+                authenticationModel.Message = $"Token Not Active.";
+                return authenticationModel;
+            }
+
+            //Revoke Current Refresh Token
+            refreshToken.Revoked = DateTime.UtcNow;
+
+            //Generate new Refresh Token and save to Database
+            var newRefreshToken = _jwtTokenService.CreateRefreshToken();
+            user.RefreshTokens.Add(newRefreshToken);
+            _context.Update(user);
+            _context.SaveChanges();
+
+            //Generates new jwt
+            authenticationModel.IsAuthenticated = true;
+            JwtSecurityToken jwtSecurityToken = await _jwtTokenService.CreateJwtToken(user);
+            authenticationModel.Token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
+            authenticationModel.Email = user.Email;
+            authenticationModel.UserName = user.UserName;
+            var rolesList = await _userManager.GetRolesAsync(user).ConfigureAwait(false);
+            authenticationModel.Roles = rolesList.ToList();
+            authenticationModel.RefreshToken = newRefreshToken.Token;
+            authenticationModel.RefreshTokenExpiration = newRefreshToken.Expires;
+            return authenticationModel;
         }
-         
+
+        public bool RevokeToken(string token)
+        {
+            var user = _context.Users.SingleOrDefault(u => u.RefreshTokens.Any(t => t.Token == token));
+
+            // return false if no user found with token
+            if (user == null) return false;
+
+            var refreshToken = user.RefreshTokens.Single(x => x.Token == token);
+
+            // return false if token is not active
+            if (!refreshToken.IsActive) return false;
+
+            // revoke token and save
+            refreshToken.Revoked = DateTime.UtcNow;
+            _context.Update(user);
+            _context.SaveChanges();
+
+            return true;
+        }
     }
 }

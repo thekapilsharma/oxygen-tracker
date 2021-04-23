@@ -11,5 +11,6 @@ namespace oxygen_tracker.Services
         RefreshToken CreateRefreshToken();
         Task<JwtSecurityToken> CreateJwtToken(ApplicationUser user);
         Task<AuthenticationModel> RefreshTokenAsync(string jwtToken);
+        bool RevokeToken(string token);
     }
 }

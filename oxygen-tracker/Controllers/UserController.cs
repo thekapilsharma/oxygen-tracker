@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using oxygen_tracker.Controllers.Services;
 using oxygen_tracker.Models;
+using oxygen_tracker.Services;
 using System;
 using System.Threading.Tasks;
 
@@ -13,10 +14,12 @@ namespace oxygen_tracker.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
+        private readonly IJwtTokenService _jwtTokenService;
 
-        public UserController(IUserService userService)
+        public UserController(IUserService userService,IJwtTokenService jwtTokenService)
         {
             _userService = userService;
+            _jwtTokenService = jwtTokenService;
         }
 
         [HttpGet("{phone}")]
@@ -30,7 +33,7 @@ namespace oxygen_tracker.Controllers
         public async Task<IActionResult> RefreshToken()
         {
             var refreshToken = Request.Cookies["refreshToken"];
-            var response = await _userService.RefreshTokenAsync(refreshToken);
+            var response = await _jwtTokenService.RefreshTokenAsync(refreshToken);
             if (!string.IsNullOrEmpty(response.RefreshToken))
                 SetRefreshTokenInCookie(response.RefreshToken);
             return Ok(response);
@@ -45,7 +48,7 @@ namespace oxygen_tracker.Controllers
             if (string.IsNullOrEmpty(token))
                 return BadRequest(new { message = "Token is required" });
 
-            var response = _userService.RevokeToken(token);
+            var response = _jwtTokenService.RevokeToken(token);
 
             if (!response)
                 return NotFound(new { message = "Token not found" });
