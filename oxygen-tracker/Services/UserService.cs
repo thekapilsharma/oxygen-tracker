@@ -27,12 +27,14 @@ namespace oxygen_tracker.Controllers.Services
         private readonly IMapper _mapper;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly JWT _jwt;
+        private readonly IJwtTokenService _jwtTokenService;
 
         public UserService(
             UserManager<ApplicationUser> userManager,
             IOptions<JWT> jwt,
             ApplicationDbContext context,
             IVerification verification,
+            IJwtTokenService jwtTokenService,
             IMapper mapper)
         {
             _context = context;
@@ -40,27 +42,28 @@ namespace oxygen_tracker.Controllers.Services
             this._mapper = mapper;
             _userManager = userManager;
             _jwt = jwt.Value;
+            _jwtTokenService = jwtTokenService;
         }
 
         public async Task<UserDetail> GetUserInfoAsync(string phoneNumber)
         {
             var userDetails = _mapper.Map<UserDetail>(await _userManager.FindByNameAsync(phoneNumber));
-            userDetails ??= new UserDetail { PhoneNumber = phoneNumber };
-            var smsVerificationResult = await _verification.StartVerificationAsync(DefaultValues.IndianCode + phoneNumber);
-            if (!smsVerificationResult.IsValid) userDetails.ErrorCodes = smsVerificationResult.Errors;
+            //userDetails ??= new UserDetail { PhoneNumber = phoneNumber };
+            //var smsVerificationResult = await _verification.StartVerificationAsync(DefaultValues.IndianCode + phoneNumber);
+            //if (!smsVerificationResult.IsValid) userDetails.ErrorCodes = smsVerificationResult.Errors;
             return userDetails;
         }
 
         public async Task<AuthenticationModel> RegisterAsync(RegisterModel model)
         {
-            var smsVerificationResult = await _verification.CheckVerificationAsync(DefaultValues.IndianCode + model.Phonenumber, model.OTP);
+            //var smsVerificationResult = await _verification.CheckVerificationAsync(DefaultValues.IndianCode + model.Phonenumber, model.OTP);
             var authenticationModel = new AuthenticationModel();
 
-            if (!smsVerificationResult.IsValid)
-            {
-                authenticationModel.ErrorCodes = smsVerificationResult.Errors;
-                return authenticationModel;
-            }
+            //if (!smsVerificationResult.IsValid)
+            //{
+            //    authenticationModel.ErrorCodes = smsVerificationResult.Errors;
+            //    return authenticationModel;
+            //}
             var user = new ApplicationUser
             {
                 UserName = model.Username,
@@ -85,7 +88,7 @@ namespace oxygen_tracker.Controllers.Services
             }
             user = await _userManager.FindByEmailAsync(model.Email);
             authenticationModel.IsAuthenticated = true;
-            JwtSecurityToken jwtSecurityToken = await CreateJwtToken(user);
+            JwtSecurityToken jwtSecurityToken = await _jwtTokenService.CreateJwtToken(user);
             authenticationModel.Token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
             authenticationModel.UserName = user.UserName;
             authenticationModel.Email = user.Email;
@@ -100,7 +103,7 @@ namespace oxygen_tracker.Controllers.Services
             }
             else
             {
-                var refreshToken = CreateRefreshToken();
+                var refreshToken = _jwtTokenService.CreateRefreshToken();
                 authenticationModel.RefreshToken = refreshToken.Token;
                 authenticationModel.RefreshTokenExpiration = refreshToken.Expires;
                 user.RefreshTokens.Add(refreshToken);
@@ -110,51 +113,7 @@ namespace oxygen_tracker.Controllers.Services
 
             return authenticationModel;
         }
-        private static RefreshToken CreateRefreshToken()
-        {
-            var randomNumber = new byte[32];
-            using var generator = new RNGCryptoServiceProvider();
-            generator.GetBytes(randomNumber);
-            return new RefreshToken
-            {
-                Token = Convert.ToBase64String(randomNumber),
-                Expires = DateTime.UtcNow.AddDays(7),
-                Created = DateTime.UtcNow
-            };
-        }
 
-        private async Task<JwtSecurityToken> CreateJwtToken(ApplicationUser user)
-        {
-            var userClaims = await _userManager.GetClaimsAsync(user);
-            var roles = await _userManager.GetRolesAsync(user);
-
-            var roleClaims = new List<Claim>();
-
-            for (int i = 0; i < roles.Count; i++)
-            {
-                roleClaims.Add(new Claim("roles", roles[i]));
-            }
-            var claims = new[]
-            {
-                new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
-                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim("uid", user.Id)
-            }
-            .Union(userClaims)
-            .Union(roleClaims);
-
-            var symmetricSecurityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwt.Key));
-            var signingCredentials = new SigningCredentials(symmetricSecurityKey, SecurityAlgorithms.HmacSha256);
-
-            var jwtSecurityToken = new JwtSecurityToken(
-                issuer: _jwt.Issuer,
-                audience: _jwt.Audience,
-                claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(_jwt.DurationInMinutes),
-                signingCredentials: signingCredentials);
-            return jwtSecurityToken;
-        }
 
         public async Task<AuthenticationModel> RefreshTokenAsync(string jwtToken)
         {
@@ -180,14 +139,14 @@ namespace oxygen_tracker.Controllers.Services
             refreshToken.Revoked = DateTime.UtcNow;
 
             //Generate new Refresh Token and save to Database
-            var newRefreshToken = CreateRefreshToken();
+            var newRefreshToken = _jwtTokenService.CreateRefreshToken();
             user.RefreshTokens.Add(newRefreshToken);
             _context.Update(user);
             _context.SaveChanges();
 
             //Generates new jwt
             authenticationModel.IsAuthenticated = true;
-            JwtSecurityToken jwtSecurityToken = await CreateJwtToken(user);
+            JwtSecurityToken jwtSecurityToken = await _jwtTokenService.CreateJwtToken(user);
             authenticationModel.Token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
             authenticationModel.Email = user.Email;
             authenticationModel.UserName = user.UserName;
