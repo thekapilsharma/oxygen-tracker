@@ -1,8 +1,7 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using oxygen_tracker.Controllers.Services;
 using oxygen_tracker.Models;
+using oxygen_tracker.Services.Interface;
 using System;
 using System.Threading.Tasks;
 
@@ -23,7 +22,7 @@ namespace oxygen_tracker.Controllers
         public async Task<IActionResult> LoginUserAsync(RegisterModel model)
         {
             var result = await _userService.RegisterAsync(model);
-            if(result.ErrorCodes == Constants.DefaultValues.ErrorCodes.None)SetRefreshTokenInCookie(result.RefreshToken);
+            if (result.ErrorCodes == Constants.DefaultValues.ErrorCodes.None) SetRefreshTokenInCookie(result.RefreshToken);
             return Ok(result);
         }
 

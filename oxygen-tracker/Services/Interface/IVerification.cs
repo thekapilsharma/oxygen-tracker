@@ -1,7 +1,7 @@
 ﻿using oxygen_tracker.Models;
 using System.Threading.Tasks;
 
-namespace oxygen_tracker.Services
+namespace oxygen_tracker.Services.Interface
 {
     public interface IVerification
     {

@@ -2,7 +2,7 @@
 using oxygen_tracker.Settings.Models;
 using System.Threading.Tasks;
 
-namespace oxygen_tracker.Controllers.Services
+namespace oxygen_tracker.Services.Interface
 {
     public interface IUserService
     {

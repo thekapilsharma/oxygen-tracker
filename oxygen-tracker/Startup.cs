@@ -1,16 +1,13 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
-using oxygen_tracker.Controllers.Services;
-using oxygen_tracker.Services;
+using oxygen_tracker.Registery;
 using oxygen_tracker.Settings;
-using oxygen_tracker.Settings.Models;
 using oxygen_tracker.Settings.Models.Contexts;
 using System;
 using System.Text;
@@ -32,16 +29,16 @@ namespace oxygen_tracker
             //Configuration from AppSettings
             services.Configure<JWT>(Configuration.GetSection("JWT"));
 
-            //User Manager Service
-            services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
-            services.AddScoped<IVerification, Verification>();
-            services.AddScoped<IUserService, UserService>();
+            //IOC
+            services.RegisterLocalDependecies();
 
             //Adding DB Context with MSSQL
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection"),
-                    b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));
+                    b => b.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)
+                    .UseNetTopologySuite()
+                    ));
 
             //Adding Athentication - JWT
             services.AddAuthentication(options =>

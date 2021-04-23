@@ -5,7 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using oxygen_tracker.Constants;
 using oxygen_tracker.Entities;
 using oxygen_tracker.Models;
-using oxygen_tracker.Services;
+using oxygen_tracker.Services.Interface;
 using oxygen_tracker.Settings;
 using oxygen_tracker.Settings.Models;
 using oxygen_tracker.Settings.Models.Contexts;
@@ -18,7 +18,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace oxygen_tracker.Controllers.Services
+namespace oxygen_tracker.Services
 {
     public class UserService : IUserService
     {
@@ -45,29 +45,29 @@ namespace oxygen_tracker.Controllers.Services
         public async Task<UserDetail> GetUserInfoAsync(string phoneNumber)
         {
             var userDetails = _mapper.Map<UserDetail>(await _userManager.FindByNameAsync(phoneNumber));
-            userDetails ??= new UserDetail { PhoneNumber = phoneNumber };
-            var smsVerificationResult = await _verification.StartVerificationAsync(DefaultValues.IndianCode + phoneNumber);
-            if (!smsVerificationResult.IsValid) userDetails.ErrorCodes = smsVerificationResult.Errors;
+            userDetails ??= new UserDetail { PhoneNumber = phoneNumber,ErrorCodes = DefaultValues.ErrorCodes.UserNotFound };
+            //var smsVerificationResult = await _verification.StartVerificationAsync(DefaultValues.IndianCode + phoneNumber);
+            //if (!smsVerificationResult.IsValid) userDetails.ErrorCodes = smsVerificationResult.Errors;
             return userDetails;
         }
 
         public async Task<AuthenticationModel> RegisterAsync(RegisterModel model)
         {
-            var smsVerificationResult = await _verification.CheckVerificationAsync(DefaultValues.IndianCode + model.Phonenumber, model.OTP);
+            //var smsVerificationResult = await _verification.CheckVerificationAsync(DefaultValues.IndianCode + model.Phonenumber, model.OTP);
             var authenticationModel = new AuthenticationModel();
 
-            if (!smsVerificationResult.IsValid)
-            {
-                authenticationModel.ErrorCodes = smsVerificationResult.Errors;
-                return authenticationModel;
-            }
+            //if (!smsVerificationResult.IsValid)
+            //{
+            //    authenticationModel.ErrorCodes = smsVerificationResult.Errors;
+            //    return authenticationModel;
+            //}
             var user = new ApplicationUser
             {
                 UserName = model.Username,
                 PhoneNumber = model.Phonenumber,
                 FirstName = model.FirstName,
                 LastName = model.LastName,
-                Email = model.Email
+                Email = model.Email,
             };
             var userDetail = await _userManager.FindByEmailAsync(model.Email);
             if (userDetail == null)
@@ -84,7 +84,15 @@ namespace oxygen_tracker.Controllers.Services
                 }
             }
             user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                authenticationModel.IsAuthenticated = false;
+                authenticationModel.ErrorCodes = DefaultValues.ErrorCodes.UserNotFound;
+                return authenticationModel;
+            }
+
             authenticationModel.IsAuthenticated = true;
+            authenticationModel.UserId = user.Id;
             JwtSecurityToken jwtSecurityToken = await CreateJwtToken(user);
             authenticationModel.Token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
             authenticationModel.UserName = user.UserName;
@@ -110,6 +118,7 @@ namespace oxygen_tracker.Controllers.Services
 
             return authenticationModel;
         }
+
         private static RefreshToken CreateRefreshToken()
         {
             var randomNumber = new byte[32];
