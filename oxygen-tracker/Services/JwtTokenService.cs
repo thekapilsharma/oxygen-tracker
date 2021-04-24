@@ -2,6 +2,7 @@
 using Microsoft.IdentityModel.Tokens;
 using oxygen_tracker.Entities;
 using oxygen_tracker.Models;
+using oxygen_tracker.Services.Interface;
 using oxygen_tracker.Settings;
 using oxygen_tracker.Settings.Models;
 using oxygen_tracker.Settings.Models.Contexts;
@@ -22,7 +23,8 @@ namespace oxygen_tracker.Services
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly JWT _jwt;
         private readonly ApplicationDbContext _context;
-        public JwtTokenService(IJwtTokenService jwtTokenService, UserManager<ApplicationUser> userManager,JWT jwt,ApplicationDbContext context)
+
+        public JwtTokenService(IJwtTokenService jwtTokenService, UserManager<ApplicationUser> userManager, JWT jwt, ApplicationDbContext context)
         {
             _jwtTokenService = jwtTokenService;
             _userManager = userManager;
@@ -35,7 +37,7 @@ namespace oxygen_tracker.Services
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
-        public async Task<JwtSecurityToken> CreateJwtToken(ApplicationUser user)
+        public async Task<JwtSecurityToken> CreateJwtTokenAsync(ApplicationUser user)
         {
             var userClaims = await _userManager.GetClaimsAsync(user);
             var roles = await _userManager.GetRolesAsync(user);
@@ -121,7 +123,7 @@ namespace oxygen_tracker.Services
 
             //Generates new jwt
             authenticationModel.IsAuthenticated = true;
-            JwtSecurityToken jwtSecurityToken = await _jwtTokenService.CreateJwtToken(user);
+            JwtSecurityToken jwtSecurityToken = await _jwtTokenService.CreateJwtTokenAsync(user);
             authenticationModel.Token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
             authenticationModel.Email = user.Email;
             authenticationModel.UserName = user.UserName;

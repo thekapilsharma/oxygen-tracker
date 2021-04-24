@@ -1,6 +1,5 @@
 ﻿using oxygen_tracker.Constants;
 using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
 
 namespace oxygen_tracker.Models
 {

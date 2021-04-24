@@ -10,8 +10,8 @@ using oxygen_tracker.Settings.Models.Contexts;
 namespace oxygen_tracker.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20210419065803_initial")]
-    partial class initial
+    [Migration("20210423173751_updated user locations with new fields")]
+    partial class updateduserlocationswithnewfields
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -152,6 +152,37 @@ namespace oxygen_tracker.Migrations
                     b.ToTable("AspNetUserTokens");
                 });
 
+            modelBuilder.Entity("oxygen_tracker.Models.UserLocation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Address")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedOn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("getdate()");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Pincode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserLocations");
+                });
+
             modelBuilder.Entity("oxygen_tracker.Settings.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
@@ -272,6 +303,15 @@ namespace oxygen_tracker.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("oxygen_tracker.Models.UserLocation", b =>
+                {
+                    b.HasOne("oxygen_tracker.Settings.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("oxygen_tracker.Settings.Models.ApplicationUser", b =>

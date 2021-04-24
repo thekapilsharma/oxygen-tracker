@@ -1,9 +1,7 @@
-﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using oxygen_tracker.Controllers.Services;
 using oxygen_tracker.Models;
-using oxygen_tracker.Services;
+using oxygen_tracker.Services.Interface;
 using System;
 using System.Threading.Tasks;
 
@@ -16,7 +14,7 @@ namespace oxygen_tracker.Controllers
         private readonly IUserService _userService;
         private readonly IJwtTokenService _jwtTokenService;
 
-        public UserController(IUserService userService,IJwtTokenService jwtTokenService)
+        public UserController(IUserService userService, IJwtTokenService jwtTokenService)
         {
             _userService = userService;
             _jwtTokenService = jwtTokenService;
