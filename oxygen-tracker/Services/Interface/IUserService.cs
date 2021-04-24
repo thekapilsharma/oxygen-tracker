@@ -8,9 +8,5 @@ namespace oxygen_tracker.Services.Interface
         Task<UserDetail> GetUserInfoAsync(string phoneNumber);
 
         Task<AuthenticationModel> RegisterAsync(RegisterModel model);
-
-        //Task<AuthenticationModel> RefreshTokenAsync(string jwtToken);
-
-        //bool RevokeToken(string token);
     }
 }

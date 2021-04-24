@@ -19,12 +19,10 @@ namespace oxygen_tracker.Services
         private readonly IVerification _verification;
         private readonly IMapper _mapper;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly JWT _jwt;
         private readonly IJwtTokenService _jwtTokenService;
 
         public UserService(
             UserManager<ApplicationUser> userManager,
-            IOptions<JWT> jwt,
             ApplicationDbContext context,
             IVerification verification,
             IJwtTokenService jwtTokenService,
@@ -34,7 +32,6 @@ namespace oxygen_tracker.Services
             _verification = verification;
             _mapper = mapper;
             _userManager = userManager;
-            _jwt = jwt.Value;
             _jwtTokenService = jwtTokenService;
         }
 

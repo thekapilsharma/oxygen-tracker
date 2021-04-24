@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using oxygen_tracker.Entities;
 using oxygen_tracker.Models;
@@ -19,17 +20,17 @@ namespace oxygen_tracker.Services
 {
     public class JwtTokenService : IJwtTokenService
     {
-        private readonly IJwtTokenService _jwtTokenService;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly JWT _jwt;
         private readonly ApplicationDbContext _context;
 
-        public JwtTokenService(IJwtTokenService jwtTokenService, UserManager<ApplicationUser> userManager, JWT jwt, ApplicationDbContext context)
+        public JwtTokenService(UserManager<ApplicationUser> userManager, ApplicationDbContext context,
+            IOptions<JWT> jwt
+            )
         {
-            _jwtTokenService = jwtTokenService;
             _userManager = userManager;
-            _jwt = jwt;
             _context = context;
+            _jwt = jwt.Value;
         }
 
         /// <summary>
@@ -116,14 +117,14 @@ namespace oxygen_tracker.Services
             refreshToken.Revoked = DateTime.UtcNow;
 
             //Generate new Refresh Token and save to Database
-            var newRefreshToken = _jwtTokenService.CreateRefreshToken();
+            var newRefreshToken = CreateRefreshToken();
             user.RefreshTokens.Add(newRefreshToken);
             _context.Update(user);
             _context.SaveChanges();
 
             //Generates new jwt
             authenticationModel.IsAuthenticated = true;
-            JwtSecurityToken jwtSecurityToken = await _jwtTokenService.CreateJwtTokenAsync(user);
+            JwtSecurityToken jwtSecurityToken = await CreateJwtTokenAsync(user);
             authenticationModel.Token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
             authenticationModel.Email = user.Email;
             authenticationModel.UserName = user.UserName;

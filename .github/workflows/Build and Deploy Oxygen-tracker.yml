@@ -31,7 +31,11 @@ jobs:
       with:
         files: '${{env.DOTNET_ROOT}}/myapp/appsettings.json'
       env:
-        ConnectionStrings.DefaultConnection: ${{ secrets.CONNECTION_STRING }}
+        JWT.key: ${{ secrets.JWT_KEY }}
+        Twilio.AccountSid: ${{ secrets.TWILIO_AID }}
+        Twilio.AuthToken: ${{ secrets.TWILIO_TOKEN }}
+        Twilio.VerificationSid: ${{ secrets.TWILIO_SID }}
+        Twilio.DefaultConnection: ${{ secrets.CONNECTION_STRING }}
         App.ServerRootAddress: ${{ env.SERVER_ROOT_ADDRESS }}
 
     - name: Upload artifact for deployment job
