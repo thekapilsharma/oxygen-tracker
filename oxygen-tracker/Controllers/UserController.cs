@@ -27,6 +27,13 @@ namespace oxygen_tracker.Controllers
             return Ok(userDetail);
         }
 
+        [HttpGet]
+        public ActionResult<UserDetail> TestAPI()
+        {
+            //var userDetail = await _userService.GetUserInfoAsync(phone);
+            return Ok("Hello Wordls");
+        }
+
         [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken()
         {
