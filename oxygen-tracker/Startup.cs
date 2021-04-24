@@ -26,6 +26,8 @@ namespace oxygen_tracker
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSwaggerGen();
+
             //Configuration from AppSettings
             services.Configure<JWT>(Configuration.GetSection("JWT"));
 
@@ -76,6 +78,7 @@ namespace oxygen_tracker
             {
                 app.UseDeveloperExceptionPage();
             }
+            app.UseSwagger();
             app.UseCors(options => options.AllowAnyOrigin()
                          .AllowAnyMethod()
                          .AllowAnyHeader()
