@@ -21,8 +21,10 @@ namespace oxygen_tracker.Models
 
         [NotMapped]
         public string UserGuid { set; get; }
+
         [NotMapped]
         public double Lat { get; set; }
+
         [NotMapped]
         public double Long { get; set; }
     }

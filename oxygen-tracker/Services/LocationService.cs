@@ -21,6 +21,7 @@ namespace oxygen_tracker.Services
             this._dbContext = dbContext;
             this._userManager = userManager;
         }
+
         public async Task<DefaultValues.ErrorCodes> AddLocationAsync(UserLocation model)
         {
             try
@@ -32,9 +33,8 @@ namespace oxygen_tracker.Services
                 await _dbContext.SaveChangesAsync();
                 return DefaultValues.ErrorCodes.None;
             }
-            catch (Exception e)
+            catch (Exception)
             {
-
                 return DefaultValues.ErrorCodes.SomethingWentWrong;
             }
         }

@@ -1,21 +1,14 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using oxygen_tracker.Constants;
-using oxygen_tracker.Entities;
 using oxygen_tracker.Models;
 using oxygen_tracker.Services.Interface;
 using oxygen_tracker.Settings;
 using oxygen_tracker.Settings.Models;
 using oxygen_tracker.Settings.Models.Contexts;
-using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace oxygen_tracker.Services
@@ -39,7 +32,7 @@ namespace oxygen_tracker.Services
         {
             _context = context;
             _verification = verification;
-            this._mapper = mapper;
+            _mapper = mapper;
             _userManager = userManager;
             _jwt = jwt.Value;
             _jwtTokenService = jwtTokenService;
@@ -48,7 +41,7 @@ namespace oxygen_tracker.Services
         public async Task<UserDetail> GetUserInfoAsync(string phoneNumber)
         {
             var userDetails = _mapper.Map<UserDetail>(await _userManager.FindByNameAsync(phoneNumber));
-            userDetails ??= new UserDetail { PhoneNumber = phoneNumber,ErrorCodes = DefaultValues.ErrorCodes.UserNotFound };
+            userDetails ??= new UserDetail { PhoneNumber = phoneNumber, ErrorCodes = DefaultValues.ErrorCodes.UserNotFound };
             var smsVerificationResult = await _verification.StartVerificationAsync(DefaultValues.IndianCode + phoneNumber);
             if (!smsVerificationResult.IsValid) userDetails.ErrorCodes = smsVerificationResult.Errors;
             return userDetails;
@@ -61,8 +54,8 @@ namespace oxygen_tracker.Services
 
             if (!smsVerificationResult.IsValid)
             {
-               authenticationModel.ErrorCodes = smsVerificationResult.Errors;
-               return authenticationModel;
+                authenticationModel.ErrorCodes = smsVerificationResult.Errors;
+                return authenticationModel;
             }
             var user = new ApplicationUser
             {
@@ -96,7 +89,7 @@ namespace oxygen_tracker.Services
 
             authenticationModel.IsAuthenticated = true;
             authenticationModel.UserId = user.Id;
-            JwtSecurityToken jwtSecurityToken = await _jwtTokenService.CreateJwtToken(user);
+            JwtSecurityToken jwtSecurityToken = await _jwtTokenService.CreateJwtTokenAsync(user);
             authenticationModel.Token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
             authenticationModel.UserName = user.UserName;
             authenticationModel.Email = user.Email;

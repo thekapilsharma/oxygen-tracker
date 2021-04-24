@@ -25,9 +25,9 @@ namespace oxygen_tracker.Controllers
         }
 
         [HttpGet("{pageNumber}/{pageSize}")]
-        public async Task<IActionResult> GetLocation(int pageNumber,int pageSize)
+        public async Task<IActionResult> GetLocation(int pageNumber, int pageSize)
         {
-            var result = await _LocationService.GetLocationAsync(pageSize,pageNumber);
+            var result = await _LocationService.GetLocationAsync(pageSize, pageNumber);
             //if (result.ErrorCodes == Constants.DefaultValues.ErrorCodes.None) SetRefreshTokenInCookie(result.RefreshToken);
             return Ok(result);
         }

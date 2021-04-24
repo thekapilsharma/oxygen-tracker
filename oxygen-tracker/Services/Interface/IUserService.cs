@@ -1,5 +1,4 @@
 ﻿using oxygen_tracker.Models;
-using oxygen_tracker.Settings.Models;
 using System.Threading.Tasks;
 
 namespace oxygen_tracker.Services.Interface
