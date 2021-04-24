@@ -6,7 +6,7 @@ name: Build and deploy oxygen-tracker
 on:
   push:
     branches:
-      - feature/store-user-locations
+      - Development
 
 jobs:
   build:
