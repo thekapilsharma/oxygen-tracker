@@ -36,6 +36,7 @@ namespace oxygen_tracker
             services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<ApplicationDbContext>();
             services.AddScoped<IVerification, Verification>();
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IJwtTokenService, JwtTokenService>();
 
             //Adding DB Context with MSSQL
             services.AddDbContext<ApplicationDbContext>(options =>
