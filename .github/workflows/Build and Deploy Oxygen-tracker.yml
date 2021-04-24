@@ -58,11 +58,11 @@ jobs:
       with:
         name: .net-app
 
-    # - name: Deploy to Azure Web App
-    #   id: deploy-to-webapp
-    #   uses: azure/webapps-deploy@v2
-    #   with:
-    #     app-name: 'oxygen-tracker-arj'
-    #     slot-name: 'production'
-    #     publish-profile: ${{ secrets.AzureAppService_PublishProfile_28bffa02da114d9682fe88baeb49bd0d }}
-    #     package: .
+    - name: Deploy to Azure Web App
+      id: deploy-to-webapp
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'oxygen-tracker-arj'
+        slot-name: 'production'
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_28bffa02da114d9682fe88baeb49bd0d }}
+        package: .
