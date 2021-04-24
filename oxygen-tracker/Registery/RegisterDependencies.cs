@@ -15,7 +15,7 @@ namespace oxygen_tracker.Registery
             services.AddScoped<IVerification, Verification>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<ILocationService, LocationService>();
-
+            services.AddScoped<IJwtTokenService, JwtTokenService>();
             return services;
         }
     }

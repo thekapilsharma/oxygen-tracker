@@ -10,8 +10,8 @@ namespace oxygen_tracker.Services.Interface
 
         Task<AuthenticationModel> RegisterAsync(RegisterModel model);
 
-        Task<AuthenticationModel> RefreshTokenAsync(string jwtToken);
+        //Task<AuthenticationModel> RefreshTokenAsync(string jwtToken);
 
-        bool RevokeToken(string token);
+        //bool RevokeToken(string token);
     }
 }
