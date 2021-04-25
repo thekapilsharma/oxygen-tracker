@@ -27,6 +27,7 @@ namespace oxygen_tracker
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSwaggerGen();
+            services.AddHttpClient();
 
             //Configuration from AppSettings
             services.Configure<JWT>(Configuration.GetSection("JWT"));

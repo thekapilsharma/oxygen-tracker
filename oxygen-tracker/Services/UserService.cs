@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
 using oxygen_tracker.Constants;
 using oxygen_tracker.Models;
+using oxygen_tracker.Registery;
 using oxygen_tracker.Services.Interface;
 using oxygen_tracker.Settings;
 using oxygen_tracker.Settings.Models;
@@ -37,29 +38,38 @@ namespace oxygen_tracker.Services
 
         public async Task<UserDetail> GetUserInfoAsync(string phoneNumber)
         {
-            var userDetails = _mapper.Map<UserDetail>(await _userManager.FindByNameAsync(phoneNumber));
-            userDetails ??= new UserDetail { PhoneNumber = phoneNumber, ErrorCodes = DefaultValues.ErrorCodes.UserNotFound };
-            var smsVerificationResult = await _verification.StartVerificationAsync(DefaultValues.IndianCode + phoneNumber);
-            if (!smsVerificationResult.IsValid) userDetails.ErrorCodes = smsVerificationResult.Errors;
-            return userDetails;
+            try
+            {
+                var userDetails = _mapper.Map<UserDetail>(await _userManager.FindByNameAsync(phoneNumber));
+                userDetails ??= new UserDetail { PhoneNumber = phoneNumber, ErrorCodes = DefaultValues.ErrorCodes.UserNotFound };
+                //var smsVerificationResult = await _verification.StartVerificationAsync(DefaultValues.IndianCode + phoneNumber);
+                //if (!smsVerificationResult.IsValid) userDetails.ErrorCodes = smsVerificationResult.Errors;
+                return userDetails;
+            }
+            catch (System.Exception e)
+            {
+
+                return new UserDetail { FirstName = e.InnerException + " "+ e.Message };
+            }
+           
         }
 
         public async Task<AuthenticationModel> RegisterAsync(RegisterModel model)
         {
-            var smsVerificationResult = await _verification.CheckVerificationAsync(DefaultValues.IndianCode + model.Phonenumber, model.OTP);
+            //var smsVerificationResult = await _verification.CheckVerificationAsync(DefaultValues.IndianCode + model.Phonenumber, model.OTP);
             var authenticationModel = new AuthenticationModel();
 
-            if (!smsVerificationResult.IsValid)
-            {
-                authenticationModel.ErrorCodes = smsVerificationResult.Errors;
-                return authenticationModel;
-            }
+            //if (!smsVerificationResult.IsValid)
+            //{
+            //    authenticationModel.ErrorCodes = smsVerificationResult.Errors;
+            //    return authenticationModel;
+            //}
             var user = new ApplicationUser
             {
                 UserName = model.Username,
                 PhoneNumber = model.Phonenumber,
-                FirstName = model.FirstName,
-                LastName = model.LastName,
+                FirstName = model.FirstName.ToFirstUpperCase(),
+                LastName = model.LastName.ToFirstUpperCase(),
                 Email = model.Email,
             };
             var userDetail = await _userManager.FindByEmailAsync(model.Email);

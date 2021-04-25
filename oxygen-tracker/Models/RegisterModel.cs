@@ -1,4 +1,5 @@
 ﻿using oxygen_tracker.Constants;
+using oxygen_tracker.Registery;
 using System.ComponentModel.DataAnnotations;
 
 namespace oxygen_tracker.Models
@@ -17,7 +18,7 @@ namespace oxygen_tracker.Models
 
         public string OTP { get; set; }
 
-        public string Password => Phonenumber + "@" + FirstName;
+        public string Password => Phonenumber + "@" + FirstName.ToFirstUpperCase();
 
         public string Username => Phonenumber;
     }
