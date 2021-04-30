@@ -31,8 +31,7 @@ namespace oxygen_tracker.Controllers
         public ActionResult<UserDetail> TestAPI()
         {
             //var userDetail = await _userService.GetUserInfoAsync(phone);
-            var x = 10;
-            int b=x / 0;
+       
             return Ok("Hello Wordls");
         }
 
