@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
+using oxygen_tracker.Helper;
 using oxygen_tracker.Registery;
 using oxygen_tracker.Settings;
 using oxygen_tracker.Settings.Models.Contexts;
@@ -90,7 +91,7 @@ namespace oxygen_tracker
 
             app.UseAuthentication();
             app.UseAuthorization();
-
+            app.UseExceptionHandlerMiddleware();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

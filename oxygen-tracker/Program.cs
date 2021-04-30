@@ -14,7 +14,12 @@ namespace oxygen_tracker
     {
         public async static Task Main(string[] args)
         {
-            var host = CreateHostBuilder(args)
+            var host = CreateHostBuilder(args).ConfigureLogging((hostingContext, logging) =>
+            {
+                logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
+                logging.AddConsole();
+                logging.AddDebug();
+            })
                          .Build();
 
             using (var scope = host.Services.CreateScope())
